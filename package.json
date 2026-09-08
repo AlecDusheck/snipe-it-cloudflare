@@ -1,0 +1,43 @@
+{
+	"name": "snipeit-cf",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Snipe-IT asset management, self-hosted on Cloudflare Containers with R2-backed durability and automatic upstream updates",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"types": "wrangler types --strict-vars=false",
+		"typecheck": "wrangler types --strict-vars=false && tsc --noEmit",
+		"lint": "oxlint",
+		"fmt": "oxfmt",
+		"check": "npm run typecheck && oxlint && oxfmt --check"
+	},
+	"dependencies": {
+		"@cloudflare/containers": "0.3.7",
+		"postal-mime": "^3.0.0"
+	},
+	"devDependencies": {
+		"oxfmt": "0.67.0",
+		"oxlint": "1.82.0",
+		"typescript": "7.0.2",
+		"wrangler": "4.130.0"
+	},
+	"cloudflare": {
+		"label": "Snipe-IT",
+		"products": [
+			"Workers",
+			"Durable Objects",
+			"Containers",
+			"R2"
+		],
+		"categories": [
+			"storage"
+		],
+		"docs_url": "https://snipe-it.readme.io/docs",
+		"bindings": {
+			"STATE": {
+				"description": "R2 bucket holding your Snipe-IT database checkpoints and uploaded files. This is the **only** place your data is durably stored, so do not delete it."
+			}
+		}
+	}
+}

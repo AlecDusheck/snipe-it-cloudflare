@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<title>Starting up</title>
+		<style>
+			:root {
+				color-scheme: light dark;
+				--main-theme-color: #3c8dbc;
+				--color-bg: light-dark(#ecf0f5, #222222);
+				--color-fg: light-dark(#373636, #ffffff);
+				--box-bg: light-dark(#ffffff, #3d4144);
+				--box-border: light-dark(#d2d6de, #605e5e);
+				--text-muted: light-dark(#605e5e, #d2d6de);
+				--danger: #dd4b39;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				min-height: 100vh;
+				background: var(--color-bg);
+				color: var(--color-fg);
+				font:
+					13px/1.5 -apple-system,
+					BlinkMacSystemFont,
+					"Segoe UI",
+					Roboto,
+					Oxygen,
+					Ubuntu,
+					Cantarell,
+					"Fira Sans",
+					"Droid Sans",
+					"Helvetica Neue",
+					sans-serif;
+			}
+			header {
+				background: var(--main-theme-color);
+				color: #fff;
+				height: 50px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 20px;
+				font-weight: 300;
+				letter-spacing: 0.02em;
+			}
+			main {
+				max-width: 360px;
+				margin: 60px auto;
+				padding: 0 16px;
+			}
+			.box {
+				background: var(--box-bg);
+				border-top: 3px solid var(--box-border);
+				border-radius: 3px;
+				padding: 24px;
+				box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+			}
+			h1 {
+				margin: 0 0 4px;
+				font-size: 18px;
+				font-weight: 500;
+			}
+			h1.error {
+				color: var(--danger);
+			}
+			p {
+				margin: 0;
+				color: var(--text-muted);
+			}
+			.progress {
+				height: 4px;
+				margin-top: 20px;
+				background: var(--color-bg);
+				border-radius: 2px;
+				overflow: hidden;
+			}
+			.progress i {
+				display: block;
+				height: 100%;
+				width: 40%;
+				background: var(--main-theme-color);
+				animation: slide 1.4s ease-in-out infinite;
+			}
+			@keyframes slide {
+				from {
+					transform: translateX(-100%);
+				}
+				to {
+					transform: translateX(250%);
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.progress i {
+					animation: none;
+					width: 100%;
+					opacity: 0.5;
+				}
+			}
+			.retry {
+				display: none;
+				margin-top: 16px;
+				padding: 6px 12px;
+				font: inherit;
+				cursor: pointer;
+				color: #fff;
+				background: var(--main-theme-color);
+				border: 0;
+				border-radius: 3px;
+			}
+			footer {
+				margin-top: 24px;
+				text-align: center;
+				color: var(--text-muted);
+				font-size: 12px;
+			}
+		</style>
+	</head>
+	<body>
+		<header></header>
+		<main>
+			<div class="box">
+				<h1 id="title"></h1>
+				<p id="hint"></p>
+				<div class="progress" id="progress"><i></i></div>
+				<button class="retry" id="retry" onclick="location.reload()">Try again</button>
+			</div>
+			<footer>This page refreshes by itself.</footer>
+		</main>
+		<script>
+			var COPY = {
+				stopped: ["Starting up", "This usually takes under a minute"],
+				starting: ["Starting up", "This usually takes under a minute"],
+				restoring: ["Loading your data", "Almost there"],
+				updating: ["Installing an update", "This can take a few minutes"],
+				migrating: ["Finishing up", "Just a moment"],
+				stopping: ["Restarting", "Back shortly"],
+				error: [
+					"Something went wrong",
+					"Please try again in a minute. If this keeps happening, contact your administrator.",
+				],
+			};
+			var $ = function (id) {
+				return document.getElementById(id);
+			};
+			function render(s) {
+				if (s.phase === "ready") {
+					location.reload();
+					return;
+				}
+				var c = COPY[s.phase] || COPY.starting,
+					failed = s.phase === "error";
+				$("title").textContent = c[0];
+				$("title").className = failed ? "error" : "";
+				$("hint").textContent = c[1];
+				$("progress").style.display = failed ? "none" : "";
+				$("retry").style.display = failed ? "inline-block" : "";
+			}
+			var failures = 0;
+			function poll() {
+				fetch("/.snipe-cf.json?wake=1", { headers: { accept: "application/json" }, cache: "no-store" })
+					.then(function (r) {
+						return r.json();
+					})
+					.then(function (s) {
+						failures = 0;
+						render(s);
+						if (s.phase !== "error") setTimeout(poll, 1500);
+					})
+					.catch(function () {
+						setTimeout(poll, Math.min(1500 * ++failures, 8000));
+					});
+			}
+			render(__STATUS__);
+			setTimeout(poll, 1200);
+		</script>
+	</body>
+</html>

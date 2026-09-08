@@ -1,0 +1,54 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "snipe-it-cf",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-09-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": { "enabled": true },
+
+	"containers": [
+		{
+			"class_name": "SnipeITContainer",
+			"image": "./Dockerfile",
+			"instance_type": "standard-1",
+			// the database lives inside the container; there can only be one
+			"max_instances": 1,
+		},
+	],
+	"durable_objects": {
+		"bindings": [{ "class_name": "SnipeITContainer", "name": "SNIPEIT" }],
+	},
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["SnipeITContainer"] }],
+
+	// the only durable copy of your data
+	"r2_buckets": [{ "binding": "STATE", "bucket_name": "snipeit-state" }],
+
+	// Mail goes out through Cloudflare Email Service. Onboard your domain once:
+	//   npx wrangler email sending enable example.com
+	// then set MAIL_FROM_ADDR below. Set MAIL_MAILER=smtp to use another provider.
+	"send_email": [{ "name": "EMAIL" }],
+
+	// crons are UTC; Snipe-IT's scheduled tasks fire at 00:00 APP_TIMEZONE, so shift these if you change it
+	"triggers": {
+		"crons": [
+			"58 23 * * *", // wake so the scheduler is up at midnight
+			"30 0 * * *", // archive + prune checkpoints, restart if a release is waiting
+		],
+	},
+
+	"vars": {
+		// GitHub release line to follow at boot: "v8" = newest v8.x.y, "v8.7.2" pins
+		"SNIPEIT_TRACK": "v8",
+		// idle time before sleeping; "0" = never sleep (~$28/mo on standard-1)
+		"SLEEP_AFTER": "1h",
+		// seconds; worst-case data loss if the host dies without SIGTERM
+		"BINLOG_SHIP_INTERVAL": "15",
+		"CHECKPOINT_INTERVAL": "900",
+		"KEEP_CHECKPOINTS": "24",
+		"KEEP_ARCHIVE_DAYS": "90",
+		// everything below, and every secret, is passed to Snipe-IT as-is
+		"APP_TIMEZONE": "UTC",
+		"MAIL_FROM_ADDR": "snipeit@example.com",
+		"MAIL_FROM_NAME": "Snipe-IT",
+	},
+}

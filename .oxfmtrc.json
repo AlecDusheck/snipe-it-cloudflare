@@ -1,0 +1,6 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"useTabs": true,
+	"printWidth": 110,
+	"ignorePatterns": ["worker-configuration.d.ts", "node_modules", "package-lock.json"]
+}

@@ -1,0 +1,3 @@
+#!/bin/sh
+# sendmail(8) stand-in for Snipe-IT: raw message on stdin, delivered by the Worker via Email Service
+exec curl -fsS --max-time 30 --data-binary @- http://mail.snipe-cf.internal/send -o /dev/null
