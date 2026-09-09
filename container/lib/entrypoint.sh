@@ -32,7 +32,7 @@ keys_restore
 status migrating
 # upstream's startup script does the Laravel prep; only its final exec is dropped
 grep -v '^exec httpd' /startup.sh > /run/snipe-cf/prep.sh
-(cd "$APP_DIR" && bash /run/snipe-cf/prep.sh && php artisan migrate --force && php artisan config:cache) >/dev/null
+(cd "$APP_DIR" && bash /run/snipe-cf/prep.sh && php artisan migrate --force && php artisan config:cache && php artisan view:cache) >/dev/null
 [ -f "$STATE_DIR/keys/oauth-private.key" ] || (cd "$APP_DIR" && su-exec apache php artisan passport:keys --no-interaction >/dev/null) || true
 keys_save || log "could not save Passport keys"
 
