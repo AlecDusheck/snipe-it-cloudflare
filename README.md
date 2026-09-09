@@ -6,8 +6,16 @@
 
 Click, pick a name, open the URL. Snipe-IT's setup wizard does the rest. Requires the Workers Paid plan.
 
-## Motivation
-Lots of people already run Snipe-IT behind a Cloudflare Tunnel. At that point, why not run it *on* Cloudflare? This runs Snipe-IT in a container close to your region, with your data checkpointed to R2 automatically, and [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/) one click away as an extra layer in front of it.
+## When to use this
+Use this if you want Snipe-IT to exist without being a machine you own. No OS to patch, no docker-compose.yml to remember, no backup cron you've never tested a restore from. It fits well if:
+
+- You're already on Cloudflare, or already tunneling Snipe-IT through it.
+- You want SSO in front of it without standing anything up. Cloudflare Access is one policy away.
+- Cost sensitive (cold start can be enabled or disabled)  
+- You want zero-configuration backups which are easy to restore from
+- Zero patching and auto updates
+
+This was really made to be something where you can click the "deploy with Cloudflare" button, you set it up, and forget about it.
 
 ## Configuration
 
@@ -28,6 +36,11 @@ npx wrangler r2 object get --remote snipeit-state/snipeit/db/archive/2026-09-01.
 npx wrangler r2 object put --remote snipeit-state/snipeit/db/dump/1.sql.gz --file a.sql.gz
 printf 1 | npx wrangler r2 object put --remote snipeit-state/snipeit/db/LATEST --pipe
 ```
+
+## Development Motivation
+Lots of people already run Snipe-IT behind a Cloudflare Tunnel. At that point the only thing still on your own hardware is a box that needs patching, a MySQL you hope is being backed up, and a docker-compose.yml you last touched a year ago. This moves that part to Cloudflare too.
+
+Asset tracking turns out to be a good fit. You touch it a few times a week, so it can sleep; the data is small and boring, so R2 handles it; and the thing you actually care about is that it's still there in three years — which is a storage problem, not a compute problem.
 
 ## How it works
 
