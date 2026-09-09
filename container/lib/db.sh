@@ -12,12 +12,14 @@ init() {
 }
 
 ensure_user() {
-	sql <<-SQL
+	local out
+	out=$(sql 2>&1 <<-SQL
 		CREATE DATABASE IF NOT EXISTS \`$DB\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 		CREATE USER IF NOT EXISTS '$DB'@'localhost';
 		ALTER USER '$DB'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
 		GRANT ALL ON \`$DB\`.* TO '$DB'@'localhost';
 	SQL
+	) || die "ensure-user: $out"
 }
 
 # restored rows must not be logged again, or the next incarnation would replay them twice
