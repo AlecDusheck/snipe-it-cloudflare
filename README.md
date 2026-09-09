@@ -6,6 +6,8 @@
 
 Click, pick a name, open the URL. Snipe-IT's setup wizard does the rest. Requires the Workers Paid plan.
 
+Snipe-IT itself is upstream's release, unmodified, installed the way upstream's `upgrade.php` does it. This repo is the deploy glue.
+
 ## When to use this
 Use this if you want Snipe-IT to exist without being a machine you own. No OS to patch, no docker-compose.yml to remember, no backup cron you've never tested a restore from. It fits well if:
 
@@ -16,6 +18,11 @@ Use this if you want Snipe-IT to exist without being a machine you own. No OS to
 - Zero patching and auto updates
 
 This was really made to be something where you can click the "deploy with Cloudflare" button, you set it up, and forget about it.
+
+## Motivation
+Lots of people already run Snipe-IT behind a Cloudflare Tunnel. At that point the only thing still on your own hardware is a box that needs patching, a MySQL you hope is being backed up, and a docker-compose.yml you last touched a year ago. This moves that part to Cloudflare too.
+
+Asset tracking turns out to be a good fit. You touch it a few times a week, so it can sleep; the data is small and boring, so R2 handles it; and the thing you actually care about is that it's still there in three years — which is a storage problem, not a compute problem.
 
 ## Configuration
 
@@ -37,21 +44,17 @@ npx wrangler r2 object put --remote snipeit-state/snipeit/db/dump/1.sql.gz --fil
 printf 1 | npx wrangler r2 object put --remote snipeit-state/snipeit/db/LATEST --pipe
 ```
 
-## Development Motivation
-Lots of people already run Snipe-IT behind a Cloudflare Tunnel. At that point the only thing still on your own hardware is a box that needs patching, a MySQL you hope is being backed up, and a docker-compose.yml you last touched a year ago. This moves that part to Cloudflare too.
-
-Asset tracking turns out to be a good fit. You touch it a few times a week, so it can sleep; the data is small and boring, so R2 handles it; and the thing you actually care about is that it's still there in three years — which is a storage problem, not a compute problem.
+`db/archive/` holds plain `mysqldump` output, gzipped. Nothing here is a proprietary format — download a day's archive and you can restore it into any MySQL, on a VPS or anywhere else, without this project involved.
 
 ## How it works
 
 ![Architecture](docs/architecture.svg)
 
-- **Container** runs Snipe-IT and MariaDB together (nothing can route MySQL between two containers). Disk is ephemeral.
-- **Database** lives on the container's disk. Binary logs ship to R2 every 30 s and a full dump every 30 min, both only when something changed, plus a dump on shutdown. Boot restores the latest dump and replays the logs. Worst case loss: one shipping interval, only if the host dies without a SIGTERM.
+- **Database** lives on the container's disk. Binary logs ship to R2 every 30 s and a full dump every 30 min, both only when something changed, plus a dump on shutdown. **Every boot restores from R2**. Ungraceful host death is tested with SIGKILL.
 - **Uploads** go straight to R2: the Worker speaks just enough S3 to Snipe-IT's own S3 driver. Nothing to restore on boot.
 - **Credentials** don't exist. The container reaches R2, the DO and Email Service through virtual hosts handled by the Worker; `APP_KEY` and the DB password are generated on first boot and kept in DO storage.
-- **Sleep** after `SLEEP_AFTER` (1h) of idle. The next visitor sees a wake screen for ~20 s; API clients just wait. `"0"` keeps it running (~$28/mo on `standard-1`).
-- **Updates** happen at boot: the newest release on `SNIPEIT_TRACK` (`v8`) is installed from GitHub the way upstream's `upgrade.php` does it. A running container restarts nightly if a release is waiting. Pin with `SNIPEIT_TRACK: "v8.7.2"`.
+- **Sleep** after `SLEEP_AFTER` (1h) of idle. The next visitor sees a wake screen for ~5-10 s; API clients just wait. `"0"` keeps it running at standard [Cloudflare Containers pricing](https://developers.cloudflare.com/containers/pricing/). Cloudflare Containers are very competitivly priced.
+- **Updates** happen at boot: the newest release on `SNIPEIT_TRACK` (`v8`) is installed from GitHub the way upstream's `upgrade.php` does it. A running container restarts nightly if a release is waiting. For production, pin an exact version (`SNIPEIT_TRACK: "v8.7.2"`) and bump it deliberately — Snipe-IT point releases occasionally ship manual upgrade notes.
 - **Email** goes out through Email Service via Snipe-IT's `sendmail` transport; the Worker hands the raw message to the binding.
 
 ## Development
