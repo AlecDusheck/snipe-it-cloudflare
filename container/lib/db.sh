@@ -50,8 +50,8 @@ restore() {
 # from it never re-applies a row the dump already contains.
 checkpoint() {
 	# nothing committed since the last checkpoint: nothing to write
-	local pos; pos=$(sql -Nse 'SHOW MASTER STATUS' | cut -f1,2)
-	[ "$pos" != "$(cat /run/snipe-cf/checkpoint.pos 2>/dev/null)" ] || return 0
+	local head; head=$(sql -Nse 'SHOW MASTER STATUS' | cut -f1,2)
+	[ "$head" != "$(cat /run/snipe-cf/checkpoint.pos 2>/dev/null)" ] || return 0
 	local ts tmp; ts=$(date +%s); tmp=$(mktemp -d)
 	mariadb-dump --protocol=socket -uroot --single-transaction --quick --master-data=2 \
 		--routines --triggers --events "$DB" | gzip > "$tmp/dump.sql.gz"
@@ -63,7 +63,7 @@ checkpoint() {
 	r2_put "db/dump/$ts.sql.gz" "$tmp/dump.sql.gz"
 	r2_put "db/dump/$ts.meta.json" "$tmp/meta.json"
 	printf '%s' "$ts" > "$tmp/LATEST"; r2_put db/LATEST "$tmp/LATEST"
-	printf '%s' "$pos" > /run/snipe-cf/checkpoint.pos
+	printf '%s' "$head" > /run/snipe-cf/checkpoint.pos
 	rm -rf "$tmp"
 	log "checkpoint $ts (binlog $file:$pos)"
 }
