@@ -17,7 +17,7 @@ browser ─▶ Worker ─▶ Durable Object ─▶ container (Apache/PHP 8.4 + M
 ```
 
 - **Container** runs Snipe-IT and MariaDB together (nothing can route MySQL between two containers). Disk is ephemeral.
-- **Database** lives on the container's disk. Binary logs ship to R2 every 15 s, a full dump every 15 min and on shutdown. Boot restores the latest dump and replays the logs. Worst case loss: one shipping interval, only if the host dies without a SIGTERM.
+- **Database** lives on the container's disk. Binary logs ship to R2 every 30 s and a full dump every 30 min, both only when something changed, plus a dump on shutdown. Boot restores the latest dump and replays the logs. Worst case loss: one shipping interval, only if the host dies without a SIGTERM.
 - **Uploads** go straight to R2: the Worker speaks just enough S3 to Snipe-IT's own S3 driver. Nothing to restore on boot.
 - **Credentials** don't exist. The container reaches R2, the DO and Email Service through virtual hosts handled by the Worker; `APP_KEY` and the DB password are generated on first boot and kept in DO storage.
 - **Sleep** after `SLEEP_AFTER` (1h) of idle. The next visitor sees a wake screen for ~~20 s; API clients just wait. `"0"` keeps it running (~~$28/mo on `standard-1`).

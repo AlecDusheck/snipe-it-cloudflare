@@ -41,9 +41,9 @@
 		"SNIPEIT_TRACK": "v8",
 		// idle time before sleeping; "0" = never sleep (~$28/mo on standard-1)
 		"SLEEP_AFTER": "1h",
-		// seconds; worst-case data loss if the host dies without SIGTERM
-		"BINLOG_SHIP_INTERVAL": "15",
-		"CHECKPOINT_INTERVAL": "900",
+		// seconds; worst-case data loss if the host dies without SIGTERM. Only writes when something changed.
+		"BINLOG_SHIP_INTERVAL": "30",
+		"CHECKPOINT_INTERVAL": "1800",
 		"KEEP_CHECKPOINTS": "24",
 		"KEEP_ARCHIVE_DAYS": "90",
 		// everything below, and every secret, is passed to Snipe-IT as-is
