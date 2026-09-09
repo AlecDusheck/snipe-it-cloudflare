@@ -51,7 +51,7 @@ printf 1 | npx wrangler r2 object put --remote snipeit-state/snipeit/db/LATEST -
 ![Architecture](docs/architecture.svg)
 
 - **Database** lives on the container's disk. Binary logs ship to R2 every 30 s and a full dump every 30 min, both only when something changed, plus a dump on shutdown. **Every boot restores from R2**. Ungraceful host death is tested with SIGKILL.
-- **Uploads** go straight to R2: the Worker speaks just enough S3 to Snipe-IT's own S3 driver. Nothing to restore on boot.
+- **Uploads** go straight to R2
 - **Credentials** don't exist. The container reaches R2, the DO and Email Service through virtual hosts handled by the Worker; `APP_KEY` and the DB password are generated on first boot and kept in DO storage.
 - **Sleep** after `SLEEP_AFTER` (1h) of idle. The next visitor sees a wake screen for ~5-10 s; API clients just wait. `"0"` keeps it running at standard [Cloudflare Containers pricing](https://developers.cloudflare.com/containers/pricing/). Cloudflare Containers are very competitivly priced.
 - **Updates** happen at boot: the newest release on `SNIPEIT_TRACK` (`v8`) is installed from GitHub the way upstream's `upgrade.php` does it. A running container restarts nightly if a release is waiting. For production, pin an exact version (`SNIPEIT_TRACK: "v8.7.2"`) and bump it deliberately — Snipe-IT point releases occasionally ship manual upgrade notes.
