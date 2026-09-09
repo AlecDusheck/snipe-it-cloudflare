@@ -8,13 +8,7 @@ Click, pick a name, open the URL. Snipe-IT's setup wizard does the rest. Require
 
 ## How it works
 
-```
-browser ─▶ Worker ─▶ Durable Object ─▶ container (Apache/PHP 8.4 + MariaDB)
-                          ▲                 │  http://*.snipe-cf.internal
-                          └── phase ────────┤
-                                            ▼
-                                    R2: dumps, binlogs, uploads
-```
+![Architecture](docs/architecture.svg)
 
 - **Container** runs Snipe-IT and MariaDB together (nothing can route MySQL between two containers). Disk is ephemeral.
 - **Database** lives on the container's disk. Binary logs ship to R2 every 30 s and a full dump every 30 min, both only when something changed, plus a dump on shutdown. Boot restores the latest dump and replays the logs. Worst case loss: one shipping interval, only if the host dies without a SIGTERM.

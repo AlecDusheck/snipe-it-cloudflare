@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" width="800" height="320" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13">
+  <style>
+    text { fill: #1f2328; }
+    .muted { fill: #656d76; font-size: 11px; }
+    .box { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.5; }
+    .accent { fill: #eaf3fa; stroke: #3c8dbc; }
+    .line { stroke: #8c959f; stroke-width: 1.5; fill: none; }
+    .arrow { fill: #8c959f; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; fill: #656d76; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #e6edf3; }
+      .muted, .mono { fill: #9aa4af; }
+      .box { fill: #161b22; stroke: #30363d; }
+      .accent { fill: #0d2a45; stroke: #58a6ff; }
+      .line { stroke: #8b949e; }
+      .arrow { fill: #8b949e; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrow"/>
+    </marker>
+  </defs>
+
+  <!-- request path -->
+  <rect x="20" y="60" width="90" height="44" rx="6" class="box"/>
+  <text x="65" y="87" text-anchor="middle">browser</text>
+
+  <rect x="160" y="60" width="90" height="44" rx="6" class="box"/>
+  <text x="205" y="87" text-anchor="middle">Worker</text>
+
+  <rect x="300" y="60" width="130" height="44" rx="6" class="box"/>
+  <text x="365" y="81" text-anchor="middle">Durable Object</text>
+  <text x="365" y="96" text-anchor="middle" class="muted">phase · APP_KEY</text>
+
+  <rect x="500" y="40" width="280" height="84" rx="6" class="accent"/>
+  <text x="640" y="62" text-anchor="middle">container</text>
+  <text x="640" y="80" text-anchor="middle" class="muted">Apache + PHP 8.4 · MariaDB</text>
+  <text x="640" y="96" text-anchor="middle" class="muted">ephemeral disk</text>
+  <text x="640" y="112" text-anchor="middle" class="muted">sleeps when idle</text>
+
+  <path d="M110,82 H160" class="line" marker-end="url(#a)"/>
+  <path d="M250,82 H300" class="line" marker-end="url(#a)"/>
+  <path d="M430,82 H500" class="line" marker-end="url(#a)"/>
+
+  <!-- container -> DO: boot phase -->
+  <path d="M500,112 H365 V104" class="line" marker-end="url(#a)"/>
+  <text x="372" y="128" class="muted">boot phase</text>
+
+  <!-- container <-> R2 -->
+  <rect x="500" y="210" width="280" height="70" rx="6" class="box"/>
+  <text x="640" y="234" text-anchor="middle">R2</text>
+  <text x="640" y="252" text-anchor="middle" class="muted">db dumps · binlogs · uploads · keys</text>
+  <text x="640" y="268" text-anchor="middle" class="muted">nightly archives</text>
+
+  <path d="M560,124 V210" class="line" marker-end="url(#a)"/>
+  <text x="568" y="152" class="muted">checkpoints, binlogs</text>
+  <text x="568" y="167" class="muted">uploads (S3)</text>
+
+  <path d="M740,210 V124" class="line" marker-end="url(#a)"/>
+  <text x="732" y="167" text-anchor="end" class="muted">restore on boot</text>
+
+  <!-- container -> Email Service -->
+  <rect x="160" y="210" width="200" height="44" rx="6" class="box"/>
+  <text x="260" y="231" text-anchor="middle">Email Service</text>
+  <text x="260" y="246" text-anchor="middle" class="muted">sendmail → raw MIME</text>
+  <path d="M500,118 H450 V232 H360" class="line" marker-end="url(#a)"/>
+
+  <text x="20" y="305" class="mono">container egress is plain HTTP to *.snipe-cf.internal, answered by the Worker's bindings — no credentials anywhere</text>
+</svg>
