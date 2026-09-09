@@ -28,6 +28,8 @@ browser ─▶ Worker ─▶ Durable Object ─▶ container (Apache/PHP 8.4 + M
 
 Every string in `wrangler.jsonc` `vars`, and every secret from `wrangler secret put`, is passed to Snipe-IT as-is — use the names from [`.env.example`](https://github.com/grokability/snipe-it/blob/master/.env.example). Database and filesystem settings are fixed.
 
+`APP_URL` is taken from the first request; set it explicitly in `vars` once you add a custom domain.
+
 Crons are UTC and Snipe-IT's scheduled tasks fire at 00:00 `APP_TIMEZONE`; shift the crons if you change the timezone.
 
 ## Backups

@@ -90,19 +90,19 @@ export class SnipeITContainer extends Container {
 			this.secret("dbPassword"),
 			this.ctx.storage.get<string>("appUrl"),
 		]);
-		const url = appUrl ?? "http://localhost";
 		const passthrough = Object.fromEntries(
 			Object.entries(this.env).filter((e): e is [string, string] => typeof e[1] === "string"),
 		);
+		const url = passthrough.APP_URL ?? appUrl ?? "http://localhost";
 		return {
 			APP_ENV: "production",
 			APP_DEBUG: "false",
 			SECURE_COOKIES: String(url.startsWith("https://")),
 			MAIL_MAILER: "sendmail",
 			MAIL_SENDMAIL_PATH: "/opt/snipeit-cf/sendmail -t -i",
+			APP_URL: url,
 			...passthrough,
 			APP_KEY: appKey,
-			APP_URL: url,
 			APP_TRUSTED_PROXIES: "*",
 			DB_CONNECTION: "mariadb",
 			DB_HOST: "localhost",
@@ -143,12 +143,12 @@ export class SnipeITContainer extends Container {
 
 	override async fetch(request: Request): Promise<Response> {
 		const url = new URL(request.url);
+		await this.learnAppUrl(url);
 		if (url.pathname === STATUS_PATH) {
 			const { phase } = url.searchParams.get("wake") === "1" ? await this.wake() : await this.status();
 			return Response.json({ phase }, { headers: { "cache-control": "no-store" } });
 		}
 
-		await this.learnAppUrl(url);
 		const api = isApiRequest(request);
 		// API clients wait; browsers get the wake screen after a short grace period
 		const { phase } = await this.waitUntilReady(Date.now() + (api ? 100_000 : 2_500));
@@ -170,12 +170,11 @@ export class SnipeITContainer extends Container {
 		});
 	}
 
-	// Laravel needs an absolute APP_URL; learned from traffic instead of asked for at setup.
+	// Laravel needs an absolute APP_URL; taken from the first request instead of asked for at setup.
+	// Set APP_URL in wrangler.jsonc to override (e.g. after adding a custom domain).
 	private async learnAppUrl(url: URL): Promise<void> {
-		if (url.hostname === "localhost") return;
-		if ((await this.ctx.storage.get<string>("appUrl")) !== url.origin) {
-			await this.ctx.storage.put("appUrl", url.origin);
-		}
+		if (url.hostname === "localhost" || (await this.ctx.storage.get("appUrl"))) return;
+		await this.ctx.storage.put("appUrl", url.origin);
 	}
 }
 
