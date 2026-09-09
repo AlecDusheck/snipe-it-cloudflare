@@ -6,7 +6,7 @@
 
 Click, pick a name, open the URL. Snipe-IT's setup wizard does the rest. Requires the Workers Paid plan.
 
-Snipe-IT itself is upstream's release, unmodified, installed the way upstream's `upgrade.php` does it. This repo is the deploy glue.
+Snipe-IT itself is upstream's release, unmodified, installed the way upstream's `upgrade.php` does it. This repo is a simple Cloudflare Durable Object/Container around a normal Snipe-IT instance.
 
 ## When to use this
 Use this if you want Snipe-IT to exist without being a machine you own. No OS to patch, no docker-compose.yml to remember, no backup cron you've never tested a restore from. It fits well if:
